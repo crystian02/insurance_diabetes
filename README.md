@@ -52,11 +52,12 @@ El costo del seguro está fuertemente influenciado por el tabaquismo, seguido de
 
 Se utilizó RandomForestRegressor y RandomForestClassifier para comparar desempeño con los modelos base.
 
-Modelo.              | tipo     | metrica  | Valor
-Linear Regression    | Costos   | R²       | 0.97
-RandomForest.        | Costos   | R²       | 0.99
-Logistic Regression  | Diabetes | ROC-AUC  | 0.84
-RandomForest         | Diabetes | ROC-AUC  | 1.00
+Modelo               | Tipo     | Métrica   | Valor
+---------------------|----------|-----------|-------
+Linear Regression    | Costos   | R²        | 0.97
+RandomForest         | Costos   | R²        | 0.99
+Logistic Regression  | Diabetes | ROC-AUC   | 0.84
+RandomForest         | Diabetes | ROC-AUC   | 1.00
 
 Conclusión:
 Los modelos RandomForest presentan mayor capacidad predictiva, aunque con riesgo de sobreajuste (overfitting) en datasets pequeños.
@@ -80,11 +81,10 @@ Mejora ROC-AUC ≈ 4%
 
 ## Contexto de los datos
 
-Registros | Variables  | Descripción
-
-1338      | 7          | Predice costo de seguro según edad, IMC, hijos, tabaquismo, sexo y región.
-
-768       | 8          | Mide riesgo de diabetes según glucosa, insulina, IMC, edad y antecedentes.
+Registros | Variables | Descripción
+----------|-----------|-------------------------------------------------------------------------------------
+1338      | 7         | Predice costo de seguro según edad, IMC, hijos, tabaquismo, sexo y región.
+768       | 8         | Mide riesgo de diabetes según glucosa, insulina, IMC, edad y antecedentes.
 
 Los datos fueron limpiados y escalados con StandardScaler y OneHotEncoder para compatibilidad con los pipelines de scikit-learn.
 
