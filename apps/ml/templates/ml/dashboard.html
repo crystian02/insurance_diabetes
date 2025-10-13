@@ -1,0 +1,224 @@
+{% load static %}
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>ML – Seguros & Diabetes</title>
+    <link rel="stylesheet" href="{% static 'ml/styles.css' %}">
+  </head>
+  <body>
+    <header>
+      <h1>🧠 ML – Seguros & Diabetes</h1>
+      <p style="color:#475569;margin-top:-8px;">Modelos predictivos para salud y costos médicos</p>
+    </header>
+
+    <main>
+      {% block content %}
+      <nav class="tabs">
+        <a href="?tab=insurance">Seguro</a> |
+        <a href="?tab=diabetes">Diabetes</a>
+      </nav>
+
+      {% if tab == 'diabetes' %}
+      <h2>Predicción de riesgo de diabetes</h2>
+      <form id="f-dia" onsubmit="submitDia(event)">
+        <label>Sexo:
+          <select id="sexo" name="sex">
+            <option value="female">Femenino</option>
+            <option value="male">Masculino</option>
+          </select>
+        </label>
+
+        <div id="embarazos-field">
+          <label>Embarazos: <input name="pregnancies" type="number" value="2" min="0"></label>
+        </div>
+
+        <label>Glucosa en sangre (mg/dL): <input name="glucose" type="number" value="120"></label>
+        <label>Presión arterial diastólica (mmHg): <input name="bloodpressure" type="number" value="70"></label>
+        <label>Espesor de pliegue cutáneo (mm): <input name="skinthickness" type="number" value="20"></label>
+        <label>Insulina (μU/mL): <input name="insulin" type="number" value="85"></label>
+
+        <label>Peso (kg): <input type="number" id="weight" step="0.1" value="70"></label>
+        <label>Altura (cm): <input type="number" id="height" step="0.1" value="170"></label>
+        <label>Índice de masa corporal (IMC): <input name="bmi" id="bmi" type="number" step="0.1" readonly></label>
+        <small id="bmi-label" style="margin-left:10px; color:gray"></small>
+
+        <fieldset style="margin-top:10px; border:1px solid #ccc; padding:10px;">
+          <legend><b>Antecedentes familiares</b></legend>
+          <label><input type="checkbox" class="fam" data-factor="0.6" id="padres"> Padre o madre con diabetes</label><br>
+          <label><input type="checkbox" class="fam" data-factor="0.4" id="abuelos"> Algún abuelo/a con diabetes</label><br>
+          <label><input type="checkbox" class="fam" data-factor="0.5" id="hermanos"> Algún hermano/a con diabetes</label><br>
+          <label><input type="checkbox" class="fam" data-factor="0.3" id="otros"> Otros familiares con diabetes</label><br>
+          <label>Riesgo familiar (DPF): <input name="dpf" id="dpf" type="number" step="0.01" readonly></label>
+          <small id="dpf-label" style="margin-left:10px; color:gray"></small>
+        </fieldset>
+
+        <label>Edad (años): <input name="age" type="number" value="35"></label>
+        <button type="submit">Predecir riesgo de diabetes</button>
+      </form>
+
+      <pre id="out-dia"></pre>
+      <div id="metrics">
+        <h3>Métricas del modelo</h3>
+        <ul>
+          <li><b>ROC AUC:</b> 0.84</li>
+          <li><b>F1 Score:</b> 0.65</li>
+          <li><b>Modelo:</b> Logistic Regression</li>
+        </ul>
+      </div>
+
+      <script>
+      // 🔹 Mostrar/ocultar campo de embarazos
+      const sexoSelect = document.getElementById('sexo');
+      const embarazosDiv = document.getElementById('embarazos-field');
+      sexoSelect.addEventListener('change', () => {
+        embarazosDiv.style.display = (sexoSelect.value === 'female') ? 'inline' : 'none';
+      });
+      embarazosDiv.style.display = (sexoSelect.value === 'female') ? 'inline' : 'none';
+
+      // 🔹 Calcular IMC
+      function calcularBMI() {
+        const peso = parseFloat(document.getElementById('weight').value);
+        const altura = parseFloat(document.getElementById('height').value);
+        if (peso > 0 && altura > 0) {
+          const bmi = peso / Math.pow(altura / 100, 2);
+          document.getElementById('bmi').value = bmi.toFixed(1);
+          let clasificacion = "";
+          if (bmi < 18.5) clasificacion = "Bajo peso";
+          else if (bmi < 25) clasificacion = "Normal";
+          else if (bmi < 30) clasificacion = "Sobrepeso";
+          else clasificacion = "Obesidad";
+          document.getElementById('bmi-label').textContent = `(${clasificacion})`;
+        }
+      }
+      document.getElementById('weight').addEventListener('input', calcularBMI);
+      document.getElementById('height').addEventListener('input', calcularBMI);
+      calcularBMI();
+
+      // 🔹 Calcular riesgo familiar
+      function calcularDPF() {
+        let total = 0;
+        document.querySelectorAll('.fam:checked').forEach(cb => {
+          total += parseFloat(cb.dataset.factor);
+        });
+        if (total > 2) total = 2;
+        document.getElementById('dpf').value = total.toFixed(2);
+        let label = "Bajo";
+        if (total >= 1.5) label = "Muy alto";
+        else if (total >= 1.0) label = "Alto";
+        else if (total >= 0.6) label = "Moderado";
+        else if (total >= 0.3) label = "Leve";
+        document.getElementById('dpf-label').textContent = `(${label} riesgo familiar)`;
+      }
+      document.querySelectorAll('.fam').forEach(cb => cb.addEventListener('change', calcularDPF));
+      calcularDPF();
+
+      // 🔹 Enviar datos y mostrar interpretación
+      async function submitDia(e){
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const payload = Object.fromEntries(fd.entries());
+        for (const k of Object.keys(payload)) payload[k] = parseFloat(payload[k]);
+        payload.age = parseInt(payload.age);
+        if (payload.sex === 'male') payload.pregnancies = 0;
+
+        const r = await fetch('/api/predict_diabetes', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(payload)
+        });
+        const data = await r.json();
+        document.querySelector('#out-dia').textContent = JSON.stringify(data, null, 2);
+
+        const prob = data.probability ?? 0;
+        const pct = (prob * 100).toFixed(1);
+        let nivel = "bajo", color = "green", mensaje = "No se observan indicios relevantes de riesgo.";
+        if (prob > 0.6) {
+          nivel = "alto"; color = "red";
+          mensaje = "Se recomienda evaluación médica y control glicémico periódico.";
+        } else if (prob > 0.25) {
+          nivel = "medio"; color = "orange";
+          mensaje = "Riesgo moderado, se sugiere mantener hábitos saludables y chequeos regulares.";
+        }
+
+        const div = document.getElementById("resultado") || document.createElement("div");
+        div.id = "resultado";
+        div.style.marginTop = "15px";
+        div.innerHTML = `
+          <h3 style="color:${color}">Resultado: <b>Riesgo ${nivel.toUpperCase()}</b> (${pct}%)</h3>
+          <p>${mensaje}</p>
+        `;
+        document.querySelector("#out-dia").after(div);
+      }
+      </script>
+
+      {% else %}
+      <h2>Predicción de costo de seguro médico</h2>
+      <form id="f-ins" onsubmit="submitIns(event)">
+        <label>Edad: <input name="age" type="number" value="30"></label>
+        <label>IMC: <input name="bmi" type="number" step="0.1" value="29.5"></label>
+        <label>Hijos: <input name="children" type="number" value="1"></label>
+        <label>Fumador:
+          <select name="smoker"><option value="no">No</option><option value="yes">Sí</option></select>
+        </label>
+        <label>Sexo:
+          <select name="sex"><option value="female">Femenino</option><option value="male">Masculino</option></select>
+        </label>
+        <label>Región:
+          <select name="region">
+            <option value="northwest">Noroeste</option>
+            <option value="northeast">Noreste</option>
+            <option value="southeast">Sureste</option>
+            <option value="southwest">Suroeste</option>
+          </select>
+        </label>
+        <button type="submit">Predecir costo</button>
+      </form>
+
+      <pre id="out-ins"></pre>
+      <div id="interpretacion"></div>
+
+      <script>
+      async function submitIns(e){
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const payload = Object.fromEntries(fd.entries());
+        payload.age = parseInt(payload.age);
+        payload.children = parseInt(payload.children);
+        payload.bmi = parseFloat(payload.bmi);
+
+        const r = await fetch('/api/predict_insurance', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(payload)
+        });
+        const data = await r.json();
+        document.querySelector('#out-ins').textContent = JSON.stringify(data, null, 2);
+
+        const costo = data.predicted_cost ?? 0;
+        const fumador = payload.smoker === 'yes';
+        const bmi = payload.bmi;
+        const edad = payload.age;
+
+        let riesgo = "bajo", color = "green", mensaje = "El costo estimado del seguro es coherente con un perfil saludable.";
+        if (fumador || bmi > 30 || edad > 55) {
+          riesgo = "alto"; color = "red";
+          mensaje = "El costo es elevado debido a factores de riesgo como tabaquismo, edad o sobrepeso.";
+        } else if (bmi > 25 || edad > 40) {
+          riesgo = "medio"; color = "orange";
+          mensaje = "El costo es moderado. Mantener hábitos saludables puede reducirlo.";
+        }
+
+        const div = document.getElementById("interpretacion");
+        div.innerHTML = `
+          <h3 style="color:${color}">Costo estimado: <b>$${costo.toLocaleString("es-CL")}</b></h3>
+          <p><b>Nivel de riesgo:</b> ${riesgo.toUpperCase()}</p>
+          <p>${mensaje}</p>
+        `;
+      }
+      </script>
+      {% endif %}
+      {% endblock %}
+    </main>
+  </body>
+</html>
