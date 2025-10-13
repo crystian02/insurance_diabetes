@@ -36,8 +36,8 @@ Se probó optimizar este umbral según la métrica ROC-AUC y el F1-Score en el c
 El modelo de regresión lineal analiza las variables del dataset insurance.csv.
 Mediante RandomForestRegressor (feature_importances_), se identificaron los factores más influyentes:
 
-Variable | Importancia (%)
-
+Variable   | Importancia (%)
+-----------|---------------
 smoker_yes | 61.9%
 bmi        | 21.1%
 age        | 13.0%
