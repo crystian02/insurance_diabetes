@@ -66,13 +66,13 @@ Los modelos RandomForest presentan mayor capacidad predictiva, aunque con riesgo
 
 Se aplicó GridSearchCV y cross-validation para optimizar hiperparámetros:
 
-🔹Seguro médico (Ridge Regression)
+Seguro médico (Ridge Regression)
  --> param_grid = {'model__alpha': [0.01, 0.1, 1, 10]}
 
 Mejor parámetro: alpha = 0.1
 Mejora MAE ≈ 8.5%
 
-🔹 Diabetes (Logistic Regression)
+Diabetes (Logistic Regression)
 
 --> param_grid = {'clf__C': [0.01, 0.1, 1, 10], 'clf__penalty': ['l2']}
 
