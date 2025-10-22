@@ -1,25 +1,22 @@
+{% extends "ml/base.html" %}
 {% load static %}
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8"/>
-    <title>ML – Seguros & Diabetes</title>
-    <link rel="stylesheet" href="{% static 'ml/styles.css' %}">
-  </head>
-  <body>
-    <header>
-      <h1>🧠 ML – Seguros & Diabetes</h1>
-      <p style="color:#475569;margin-top:-8px;">Modelos predictivos para salud y costos médicos</p>
-    </header>
 
-    <main>
-      {% block content %}
-      <nav class="tabs">
-        <a href="?tab=insurance">Seguro</a> |
-        <a href="?tab=diabetes">Diabetes</a>
-      </nav>
+{% block content %}
+<header class="main-header">
+  <h1>🧠 ML – Seguros & Diabetes</h1>
+  <p class="subtitle">Modelos predictivos para salud y costos médicos</p>
+  <nav class="tabs">
+    <a href="?tab=insurance" {% if tab == 'insurance' %}class="active"{% endif %}>Seguro</a> |
+    <a href="?tab=diabetes" {% if tab == 'diabetes' %}class="active"{% endif %}>Diabetes</a>
+  </nav>
+</header>
 
-      {% if tab == 'diabetes' %}
+<main class="main-content {% if tab == 'diabetes' %}bg-diabetes{% else %}bg-insurance{% endif %}">
+  
+  <div class="overlay"></div>
+
+  <div class="content">
+    {% if tab == 'diabetes' %}
       <h2>Predicción de riesgo de diabetes</h2>
       <form id="f-dia" onsubmit="submitDia(event)">
         <label>Sexo:
@@ -30,7 +27,9 @@
         </label>
 
         <div id="embarazos-field">
-          <label>Embarazos: <input name="pregnancies" type="number" value="2" min="0"></label>
+          <label>Embarazos: 
+            <input name="pregnancies" type="number" value="2" min="0">
+          </label>
         </div>
 
         <label>Glucosa en sangre (mg/dL): <input name="glucose" type="number" value="120"></label>
@@ -40,24 +39,32 @@
 
         <label>Peso (kg): <input type="number" id="weight" step="0.1" value="70"></label>
         <label>Altura (cm): <input type="number" id="height" step="0.1" value="170"></label>
-        <label>Índice de masa corporal (IMC): <input name="bmi" id="bmi" type="number" step="0.1" readonly></label>
-        <small id="bmi-label" style="margin-left:10px; color:gray"></small>
+        <label>Índice de masa corporal (IMC): 
+          <input name="bmi" id="bmi" type="number" step="0.1" readonly inputmode="none">
+        </label>
+        <small style="color:gray;display:block;margin-top:-4px;">
+          Este indicador se calcula automáticamente.
+        </small>
 
         <fieldset style="margin-top:10px; border:1px solid #ccc; padding:10px;">
           <legend><b>Antecedentes familiares</b></legend>
-          <label><input type="checkbox" class="fam" data-factor="0.6" id="padres"> Padre o madre con diabetes</label><br>
-          <label><input type="checkbox" class="fam" data-factor="0.4" id="abuelos"> Algún abuelo/a con diabetes</label><br>
-          <label><input type="checkbox" class="fam" data-factor="0.5" id="hermanos"> Algún hermano/a con diabetes</label><br>
-          <label><input type="checkbox" class="fam" data-factor="0.3" id="otros"> Otros familiares con diabetes</label><br>
-          <label>Riesgo familiar (DPF): <input name="dpf" id="dpf" type="number" step="0.01" readonly></label>
+          <label><input type="checkbox" class="fam" data-factor="0.6"> Padre o madre con diabetes</label><br>
+          <label><input type="checkbox" class="fam" data-factor="0.4"> Algún abuelo/a con diabetes</label><br>
+          <label><input type="checkbox" class="fam" data-factor="0.5"> Algún hermano/a con diabetes</label><br>
+          <label><input type="checkbox" class="fam" data-factor="0.3"> Otros familiares con diabetes</label><br>
+          <label>Riesgo familiar (DPF): 
+            <input name="dpf" id="dpf" type="number" step="0.01" readonly>
+          </label>
           <small id="dpf-label" style="margin-left:10px; color:gray"></small>
         </fieldset>
+
+        <div id="riesgo-preview" style="font-weight:bold; margin-top:8px;"></div>
 
         <label>Edad (años): <input name="age" type="number" value="35"></label>
         <button type="submit">Predecir riesgo de diabetes</button>
       </form>
 
-      <pre id="out-dia"></pre>
+      <div id="out-dia"></div>
       <div id="metrics">
         <h3>Métricas del modelo</h3>
         <ul>
@@ -68,7 +75,7 @@
       </div>
 
       <script>
-      // 🔹 Mostrar/ocultar campo de embarazos
+      // Mostrar/ocultar campo de embarazos
       const sexoSelect = document.getElementById('sexo');
       const embarazosDiv = document.getElementById('embarazos-field');
       sexoSelect.addEventListener('change', () => {
@@ -76,26 +83,20 @@
       });
       embarazosDiv.style.display = (sexoSelect.value === 'female') ? 'inline' : 'none';
 
-      // 🔹 Calcular IMC
+      // Calcular IMC
       function calcularBMI() {
         const peso = parseFloat(document.getElementById('weight').value);
         const altura = parseFloat(document.getElementById('height').value);
         if (peso > 0 && altura > 0) {
           const bmi = peso / Math.pow(altura / 100, 2);
           document.getElementById('bmi').value = bmi.toFixed(1);
-          let clasificacion = "";
-          if (bmi < 18.5) clasificacion = "Bajo peso";
-          else if (bmi < 25) clasificacion = "Normal";
-          else if (bmi < 30) clasificacion = "Sobrepeso";
-          else clasificacion = "Obesidad";
-          document.getElementById('bmi-label').textContent = `(${clasificacion})`;
         }
       }
       document.getElementById('weight').addEventListener('input', calcularBMI);
       document.getElementById('height').addEventListener('input', calcularBMI);
       calcularBMI();
 
-      // 🔹 Calcular riesgo familiar
+      // Calcular riesgo familiar
       function calcularDPF() {
         let total = 0;
         document.querySelectorAll('.fam:checked').forEach(cb => {
@@ -103,22 +104,35 @@
         });
         if (total > 2) total = 2;
         document.getElementById('dpf').value = total.toFixed(2);
-        let label = "Bajo";
-        if (total >= 1.5) label = "Muy alto";
-        else if (total >= 1.0) label = "Alto";
-        else if (total >= 0.6) label = "Moderado";
-        else if (total >= 0.3) label = "Leve";
-        document.getElementById('dpf-label').textContent = `(${label} riesgo familiar)`;
-      }
-      document.querySelectorAll('.fam').forEach(cb => cb.addEventListener('change', calcularDPF));
-      calcularDPF();
+        let label = "Bajo", color = "#16a34a";
+        if (total >= 1.5) { label = "Muy alto"; color = "#dc2626"; }
+        else if (total >= 1.0) { label = "Alto"; color = "#ea580c"; }
+        else if (total >= 0.6) { label = "Moderado"; color = "#facc15"; }
+        else if (total >= 0.3) { label = "Leve"; color = "#65a30d"; }
 
-      // 🔹 Enviar datos y mostrar interpretación
+        document.getElementById('dpf-label').textContent = `(${label} riesgo familiar)`;
+        const preview = document.getElementById('riesgo-preview');
+        preview.textContent = `Riesgo familiar: ${label}`;
+        preview.style.color = color;
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        calcularDPF();
+        document.querySelectorAll('.fam').forEach(cb => {
+          cb.addEventListener('change', calcularDPF);
+        });
+      });
+
+      // Enviar datos
       async function submitDia(e){
         e.preventDefault();
         const fd = new FormData(e.target);
         const payload = Object.fromEntries(fd.entries());
-        for (const k of Object.keys(payload)) payload[k] = parseFloat(payload[k]);
+        for (const k of Object.keys(payload)) {
+          const val = parseFloat(payload[k]);
+          payload[k] = isNaN(val) ? 0 : val;
+        }
+        if (isNaN(payload.dpf)) payload.dpf = parseFloat(document.getElementById('dpf').value) || 0.0;
         payload.age = parseInt(payload.age);
         if (payload.sex === 'male') payload.pregnancies = 0;
 
@@ -128,7 +142,13 @@
           body: JSON.stringify(payload)
         });
         const data = await r.json();
-        document.querySelector('#out-dia').textContent = JSON.stringify(data, null, 2);
+        const jsonStr = JSON.stringify(data, null, 2);
+        document.getElementById('out-dia').innerHTML = `
+          <details>
+            <summary>Ver detalle de cálculo</summary>
+            <pre>${jsonStr}</pre>
+          </details>
+        `;
 
         const prob = data.probability ?? 0;
         const pct = (prob * 100).toFixed(1);
@@ -152,11 +172,14 @@
       }
       </script>
 
-      {% else %}
+    {% else %}
       <h2>Predicción de costo de seguro médico</h2>
       <form id="f-ins" onsubmit="submitIns(event)">
         <label>Edad: <input name="age" type="number" value="30"></label>
-        <label>IMC: <input name="bmi" type="number" step="0.1" value="29.5"></label>
+        <label>Peso (kg): <input type="number" id="weight" step="0.1" value="70"></label>
+        <label>Altura (cm): <input type="number" id="height" step="0.1" value="170"></label>
+        <label>IMC: <input name="bmi" id="bmi" type="number" step="0.1" readonly></label>
+        <small style="color:gray;display:block;">Este indicador se calcula automáticamente.</small>
         <label>Hijos: <input name="children" type="number" value="1"></label>
         <label>Fumador:
           <select name="smoker"><option value="no">No</option><option value="yes">Sí</option></select>
@@ -175,8 +198,17 @@
         <button type="submit">Predecir costo</button>
       </form>
 
-      <pre id="out-ins"></pre>
+      <div id="out-ins"></div>
       <div id="interpretacion"></div>
+      <div id="metrics">
+        <h3>Métricas del modelo</h3>
+        <ul>
+          <li><b>R² (Score):</b> 0.75</li>
+          <li><b>MAE:</b> 2700.12</li>
+          <li><b>RMSE:</b> 4100.54</li>
+          <li><b>Modelo:</b> Linear Regression</li>
+        </ul>
+      </div>
 
       <script>
       async function submitIns(e){
@@ -193,7 +225,13 @@
           body: JSON.stringify(payload)
         });
         const data = await r.json();
-        document.querySelector('#out-ins').textContent = JSON.stringify(data, null, 2);
+        const jsonStr = JSON.stringify(data, null, 2);
+        document.getElementById('out-ins').innerHTML = `
+          <details>
+            <summary>Ver detalle de cálculo</summary>
+            <pre>${jsonStr}</pre>
+          </details>
+        `;
 
         const costo = data.predicted_cost ?? 0;
         const fumador = payload.smoker === 'yes';
@@ -216,9 +254,21 @@
           <p>${mensaje}</p>
         `;
       }
+
+      // Calcular IMC
+      function calcularBMI() {
+        const peso = parseFloat(document.getElementById('weight').value);
+        const altura = parseFloat(document.getElementById('height').value);
+        if (peso > 0 && altura > 0) {
+          const bmi = peso / Math.pow(altura / 100, 2);
+          document.getElementById('bmi').value = bmi.toFixed(1);
+        }
+      }
+      document.getElementById('weight').addEventListener('input', calcularBMI);
+      document.getElementById('height').addEventListener('input', calcularBMI);
+      calcularBMI();
       </script>
-      {% endif %}
-      {% endblock %}
-    </main>
-  </body>
-</html>
+    {% endif %}
+  </div>
+</main>
+{% endblock %}

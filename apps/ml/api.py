@@ -6,9 +6,9 @@ from pathlib import Path
 
 PIPE_DIR = Path("apps/ml/pipelines")
 
-# ==============================
-# 🔹 Predicción de SEGURO MÉDICO
-# ==============================
+
+# Predicción de SEGURO MÉDICO
+
 class PredictInsurance(APIView):
     def post(self, request):
         data = request.data
@@ -28,9 +28,9 @@ class PredictInsurance(APIView):
         return Response({"predicted_cost": round(cost, 2)})
 
 
-# ============================
-# 🔹 Predicción de DIABETES
-# ============================
+
+#  Predicción de DIABETES
+
 class PredictDiabetes(APIView):
     def post(self, request):
         data = request.data

@@ -5,9 +5,18 @@
     <meta charset="utf-8"/>
     <title>ML – Seguros & Diabetes</title>
     <link rel="stylesheet" href="{% static 'ml/styles.css' %}">
+    <style>
+      /* Estilos de fondo que necesitan el tag static */
+      .bg-diabetes {
+        background-image: url("{% static 'ml/diabetes.webp' %}");
+      }
+      .bg-insurance {
+        background-image: url("{% static 'ml/insurance.jpg' %}");
+      }
+    </style>
   </head>
   <body>
-    <header><h1>ML – Seguros & Diabetes</h1></header>
-    <main>{% block content %}{% endblock %}</main>
+    {% block content %}
+    {% endblock %}
   </body>
 </html>
