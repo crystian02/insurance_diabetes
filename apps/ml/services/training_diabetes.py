@@ -1,3 +1,4 @@
+# apps/ml/services/training_diabetes.py
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline

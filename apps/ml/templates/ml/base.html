@@ -13,6 +13,7 @@
         background-image: url("{% static 'ml/insurance.jpg' %}");
       }
 
+      /* Loader inicial (app startup) */
       #loader {
         position: fixed;
         top: 0;
@@ -35,6 +36,29 @@
         pointer-events: none;
       }
 
+      /* Loader para predicciones */
+      #loader-predict {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(17, 17, 17, 0.9);
+        color: white;
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        z-index: 10000;
+        transition: opacity 0.5s ease;
+      }
+
+      #loader-predict.fade-out {
+        opacity: 0;
+        pointer-events: none;
+      }
+
       .spinner {
         margin-top: 20px;
         width: 60px;
@@ -52,8 +76,15 @@
     </style>
   </head>
   <body>
+    <!-- Loader principal al iniciar app -->
     <div id="loader">
       <h2 id="loader-text">⏳ Cargando la aplicación... por favor espera</h2>
+      <div class="spinner"></div>
+    </div>
+
+    <!-- Loader para predicciones -->
+    <div id="loader-predict">
+      <h2 id="loader-predict-text">🧮 Calculando predicción...</h2>
       <div class="spinner"></div>
     </div>
 
@@ -63,12 +94,11 @@
     </div>
 
     <script>
-      // Cambia el mensaje después de 3 segundos
+      // Loader inicial
       setTimeout(() => {
         document.getElementById('loader-text').textContent = '🤖 Iniciando motores de predicción... 🚦';
       }, 3000);
 
-      // Cuando todo esté listo, se oculta el loader
       window.addEventListener('load', () => {
         const loader = document.getElementById('loader');
         const content = document.getElementById('app-content');
@@ -78,6 +108,21 @@
           content.style.opacity = '1';
         }, 500);
       });
+
+      // Loader de predicciones
+      function showPredictLoader(msg = "🧮 Calculando predicción...") {
+        const loader = document.getElementById("loader-predict");
+        const text = document.getElementById("loader-predict-text");
+        text.textContent = msg;
+        loader.style.display = "flex";
+        loader.classList.remove("fade-out");
+      }
+
+      function hidePredictLoader() {
+        const loader = document.getElementById("loader-predict");
+        loader.classList.add("fade-out");
+        setTimeout(() => loader.style.display = "none", 500);
+      }
     </script>
   </body>
 </html>
