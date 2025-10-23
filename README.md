@@ -9,9 +9,9 @@ Ambos modelos fueron entrenados y optimizados utilizando datasets públicos de K
 	- Diabetes Prediction – Logistic Regression
 
 El sistema fue implementado en Django + Scikit-learn, con una interfaz web accesible desde un navegador, permitiendo:
-	•	Cargar los modelos en producción.
-	•	Realizar predicciones con datos ingresados manualmente.
-	•	Mostrar interpretaciones intuitivas de riesgo y costo.
+	1.	Cargar los modelos en producción.
+	2.	Realizar predicciones con datos ingresados manualmente.
+	3.	Mostrar interpretaciones intuitivas de riesgo y costo.
 ## Ejecución local
 cd insurance_diabetes   
 python -m venv .venv. --> crear entorno virtual
