@@ -6,17 +6,78 @@
     <title>ML – Seguros & Diabetes</title>
     <link rel="stylesheet" href="{% static 'ml/styles.css' %}">
     <style>
-      /* Estilos de fondo que necesitan el tag static */
       .bg-diabetes {
         background-image: url("{% static 'ml/diabetes.webp' %}");
       }
       .bg-insurance {
         background-image: url("{% static 'ml/insurance.jpg' %}");
       }
+
+      #loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #111;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        z-index: 9999;
+        transition: opacity 0.5s ease;
+      }
+
+      #loader.fade-out {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .spinner {
+        margin-top: 20px;
+        width: 60px;
+        height: 60px;
+        border: 6px solid #555;
+        border-top: 6px solid #00bfff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
     </style>
   </head>
   <body>
-    {% block content %}
-    {% endblock %}
+    <div id="loader">
+      <h2 id="loader-text">⏳ Cargando la aplicación... por favor espera</h2>
+      <div class="spinner"></div>
+    </div>
+
+    <div id="app-content" style="opacity: 0;">
+      {% block content %}
+      {% endblock %}
+    </div>
+
+    <script>
+      // Cambia el mensaje después de 3 segundos
+      setTimeout(() => {
+        document.getElementById('loader-text').textContent = '🤖 Iniciando motores de predicción... 🚦';
+      }, 3000);
+
+      // Cuando todo esté listo, se oculta el loader
+      window.addEventListener('load', () => {
+        const loader = document.getElementById('loader');
+        const content = document.getElementById('app-content');
+        loader.classList.add('fade-out');
+        setTimeout(() => {
+          loader.style.display = 'none';
+          content.style.opacity = '1';
+        }, 500);
+      });
+    </script>
   </body>
 </html>
